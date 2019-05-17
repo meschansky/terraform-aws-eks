@@ -1,4 +1,5 @@
 locals {
+  empty_stub = "^3mpty&s7r1ng%$7u8$"
   asg_tags = [for tag in keys(var.tags) : {
     key                 = tag,
     value               = lookup(var.tags, tag),

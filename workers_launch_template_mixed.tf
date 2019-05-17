@@ -30,14 +30,18 @@ resource "aws_autoscaling_group" "workers_launch_template_mixed" {
   target_group_arns = compact(
     split(
       ",",
-      coalesce(
-        lookup(
-          var.worker_groups_launch_template_mixed[count.index],
-          "target_group_arns",
-          "",
+      replace(
+        coalesce(
+          lookup(
+            var.worker_groups_launch_template_mixed[count.index],
+            "target_group_arns",
+            "",
+          ),
+          local.workers_group_defaults["target_group_arns"],
+          local.empty_stub
         ),
-        local.workers_group_defaults["target_group_arns"],
-      ),
+        local.empty_stub, ""
+      )
     ),
   )
   service_linked_role_arn = lookup(
@@ -77,14 +81,18 @@ resource "aws_autoscaling_group" "workers_launch_template_mixed" {
   enabled_metrics = compact(
     split(
       ",",
-      coalesce(
-        lookup(
-          var.worker_groups_launch_template_mixed[count.index],
-          "enabled_metrics",
-          "",
+      replace(
+        coalesce(
+          lookup(
+            var.worker_groups_launch_template_mixed[count.index],
+            "enabled_metrics",
+            "",
+          ),
+          local.workers_group_defaults["enabled_metrics"],
+          local.empty_stub
         ),
-        local.workers_group_defaults["enabled_metrics"],
-      ),
+        local.empty_stub, ""
+      )
     ),
   )
   placement_group = lookup(
@@ -196,12 +204,12 @@ resource "aws_autoscaling_group" "workers_launch_template_mixed" {
           "autoscaling_enabled",
           local.workers_group_defaults["autoscaling_enabled"],
         ) == 1 ? "enabled" : "disabled"}"
-        "value"               = "true"
+        "value"               = true
         "propagate_at_launch" = false
       },
       {
         "key"                 = "k8s.io/cluster-autoscaler/${aws_eks_cluster.this.name}"
-        "value"               = ""
+        "value"               = true
         "propagate_at_launch" = false
       },
       {

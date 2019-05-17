@@ -1,7 +1,7 @@
 locals {
-  asg_tags = [for tag in var.tags : {
-    key                 = tag[0],
-    value               = tag[1],
+  asg_tags = [for tag in keys(var.tags) : {
+    key                 = tag,
+    value               = lookup(var.tags, tag),
     propagate_at_launch = true
     }
   ]

@@ -133,7 +133,7 @@ data "template_file" "map_accounts" {
   )
 
   vars = {
-    account_number = element(var.map_accounts, count.index)
+    account_number = format("%s", element(var.map_accounts, count.index))
   }
 }
 

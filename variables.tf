@@ -40,13 +40,13 @@ variable "write_aws_auth_config" {
 
 variable "map_accounts" {
   description = "Additional AWS account numbers to add to the aws-auth configmap. See examples/basic/variables.tf for example format."
-  type        = list(string)
+  type        = list(map(string))
   default     = []
 }
 
 variable "map_accounts_count" {
   description = "The count of accounts in the map_accounts list."
-  type        = string
+  type        = number
   default     = 0
 }
 
@@ -58,7 +58,7 @@ variable "map_roles" {
 
 variable "map_roles_count" {
   description = "The count of roles in the map_roles list."
-  type        = string
+  type        = number
   default     = 0
 }
 
@@ -70,7 +70,7 @@ variable "map_users" {
 
 variable "map_users_count" {
   description = "The count of roles in the map_users list."
-  type        = string
+  type        = number
   default     = 0
 }
 

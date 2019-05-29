@@ -172,7 +172,7 @@ resource "aws_autoscaling_group" "workers_launch_template" {
 
   lifecycle {
     create_before_destroy = true
-    ignore_changes        = [desired_capacity]
+    ignore_changes        = [desired_capacity, target_group_arns]
   }
 }
 

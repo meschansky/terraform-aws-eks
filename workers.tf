@@ -26,10 +26,18 @@ resource "aws_autoscaling_group" "workers" {
   target_group_arns = compact(
     split(
       ",",
-      coalesce(
-        lookup(var.worker_groups[count.index], "target_group_arns", ""),
-        local.workers_group_defaults["target_group_arns"],
-      ),
+      replace(
+        coalesce(
+          lookup(
+            var.worker_groups[count.index],
+            "target_group_arns",
+            "",
+          ),
+          local.workers_group_defaults["target_group_arns"],
+          local.empty_stub
+        ),
+        local.empty_stub, ""
+      )
     ),
   )
   service_linked_role_arn = lookup(
@@ -62,62 +70,69 @@ resource "aws_autoscaling_group" "workers" {
   enabled_metrics = compact(
     split(
       ",",
-      coalesce(
-        lookup(var.worker_groups[count.index], "enabled_metrics", ""),
-        local.workers_group_defaults["enabled_metrics"],
-      ),
+      replace(
+        coalesce(
+          lookup(
+            var.worker_groups[count.index],
+            "enabled_metrics",
+            "",
+          ),
+          local.workers_group_defaults["enabled_metrics"],
+          local.empty_stub
+        ),
+        local.empty_stub, ""
+      )
     ),
   )
+
   placement_group = lookup(
     var.worker_groups[count.index],
     "placement_group",
     local.workers_group_defaults["placement_group"],
   )
 
-  tags = [
-    concat(
-      [
-        {
-          "key"                 = "Name"
-          "value"               = "${aws_eks_cluster.this.name}-${lookup(var.worker_groups[count.index], "name", count.index)}-eks_asg"
-          "propagate_at_launch" = true
-        },
-        {
-          "key"                 = "kubernetes.io/cluster/${aws_eks_cluster.this.name}"
-          "value"               = "owned"
-          "propagate_at_launch" = true
-        },
-        {
-          "key" = "k8s.io/cluster-autoscaler/${lookup(
-            var.worker_groups[count.index],
-            "autoscaling_enabled",
-            local.workers_group_defaults["autoscaling_enabled"],
-          ) == 1 ? "enabled" : "disabled"}"
-          "value"               = "true"
-          "propagate_at_launch" = false
-        },
-        {
-          "key"                 = "k8s.io/cluster-autoscaler/${aws_eks_cluster.this.name}"
-          "value"               = ""
-          "propagate_at_launch" = false
-        },
-        {
-          "key" = "k8s.io/cluster-autoscaler/node-template/resources/ephemeral-storage"
-          "value" = "${lookup(
-            var.worker_groups[count.index],
-            "root_volume_size",
-            local.workers_group_defaults["root_volume_size"],
-          )}Gi"
-          "propagate_at_launch" = false
-        },
-      ],
-      local.asg_tags,
-      var.worker_group_tags[contains(
-        keys(var.worker_group_tags),
-        lookup(var.worker_groups[count.index], "name", count.index),
-      ) ? lookup(var.worker_groups[count.index], "name", count.index) : "default"],
-    ),
-  ]
+  tags = concat(
+    [
+      {
+        "key"                 = "Name"
+        "value"               = "${aws_eks_cluster.this.name}-${lookup(var.worker_groups[count.index], "name", count.index)}-eks_asg"
+        "propagate_at_launch" = true
+      },
+      {
+        "key"                 = "kubernetes.io/cluster/${aws_eks_cluster.this.name}"
+        "value"               = "owned"
+        "propagate_at_launch" = true
+      },
+      {
+        "key" = "k8s.io/cluster-autoscaler/${lookup(
+          var.worker_groups[count.index],
+          "autoscaling_enabled",
+          local.workers_group_defaults["autoscaling_enabled"],
+        ) == 1 ? "enabled" : "disabled"}"
+        "value"               = true
+        "propagate_at_launch" = false
+      },
+      {
+        "key"                 = "k8s.io/cluster-autoscaler/${aws_eks_cluster.this.name}"
+        "value"               = true
+        "propagate_at_launch" = false
+      },
+      {
+        "key" = "k8s.io/cluster-autoscaler/node-template/resources/ephemeral-storage"
+        "value" = "${lookup(
+          var.worker_groups[count.index],
+          "root_volume_size",
+          local.workers_group_defaults["root_volume_size"],
+        )}Gi"
+        "propagate_at_launch" = false
+      },
+    ],
+    local.asg_tags,
+    var.worker_group_tags[contains(
+      keys(var.worker_group_tags),
+      lookup(var.worker_groups[count.index], "name", count.index),
+    ) ? lookup(var.worker_groups[count.index], "name", count.index) : "default"],
+  )
 
   lifecycle {
     create_before_destroy = true
